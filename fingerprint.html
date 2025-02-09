@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FingerprintJS</title>
+    <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@4.5.1/dist/fp.min.js"></script>
+</head>
+<body>
+    <h1>FingerprintJS</h1>
+    <h2 id="id"></h2>
+    <script>
+        // Ensure the script runs after the page is loaded
+         async function getFingerprint () {
+            try {
+                // Load FingerprintJS
+                const fp = await FingerprintJS.load();
+                const result = await fp.get();
+                
+                document.getElementById("id").innerHTML = result.visitorId;
+                console.log("Visitor ID:", result.visitorId);
+
+                // Fetch API key from config file
+                const response = await fetch('api.json');
+                const config = await response.json();
+
+                if (!config.apiKey) {
+                    console.error("API key missing in api.json");
+                    return;
+                }
+
+                const url = `${config.apiKey}register`; // Construct the URL
+                console.log("Sending data to:", url);
+
+                // Send visitorId to the server
+                const postResponse = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ visitorId: result.visitorId })
+                });
+
+                if (!postResponse.ok) {
+                    console.error("Error sending data:", await postResponse.text());
+                }
+
+            } catch (error) {
+                console.error("Error:", error);
+            }
+        };
+        getFingerprint(); // Call the function to get fingerprint and send data
+    </script>
+</body>
+</html>
